@@ -1,0 +1,10 @@
+pub mod block;
+pub mod datagen;
+pub mod entity;
+pub mod item;
+pub mod metadata;
+pub mod network;
+pub mod version;
+pub const ENTRYPOINT_INIT_KEY: &'static str = "``ENTRYPOINT_INITS``";
+pub const ENTRYPOINT_IMPORT_KEY: &'static str = "``ENTRYPOINT_IMPORTS``";
+pub const DATAGEN_INIT_KEY: &'static str = "``DATAGEN_INITS``";

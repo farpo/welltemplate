@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "``MOD_ID``",
+	"version": "${version}",
+	"name": "``MOD_NAME``",
+	"description": "``DESCRIPTION``",
+	"authors": [
+		"``MOD_AUTHORS``"
+	],
+	"contact": {
+		"homepage": "``HOMEPAGE``",
+		"sources": "``REPO``"
+	},
+	"accessWidener" : "``MOD_ID``.accesswidener",
+	"license": "MIT",
+	"icon": "assets/``MOD_ID``/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"``MOD_GROUP``.``ENTRYPOINT_NAME``"
+		],
+		"client": [
+			"``MOD_GROUP``.client.``ENTRYPOINT_NAME``Client"
+		],
+		"fabric-datagen": [
+			"``MOD_GROUP``.``ENTRYPOINT_NAME``DataGenerator"
+		]
+	},
+	"mixins": [
+		"``MOD_ID``.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=``LOADER_VERSION``",
+		"minecraft": "~``MC_VERSION``",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
