@@ -216,9 +216,11 @@ impl Welltemplate {
             self.log("Invalid: No generation path set!".to_owned());
             bool = false;
         }
-        if self.modname.is_empty() || self.modname.contains(' ') {
-            self.log("Invalid: Mod name must not contain spaces and must not be empty".to_owned());
+        if self.modname.is_empty() {
+            self.log("Invalid: Mod name must not be empty".to_owned());
             bool = false;
+        } else {
+            self.modname = self.modname.replace(' ', "");
         }
         if !is_valid_id(&self.modid) {
             self.log("Invalid: Mod id must be a valid Minecraft Namespace: Only contain lowercase ASCII, numbers, dashes, underscores and dots".to_owned());
