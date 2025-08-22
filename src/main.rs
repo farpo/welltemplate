@@ -12,7 +12,14 @@ use std::{
 use crate::{
     files::{root_files, src_files},
     modules::{
-        block::Block, datagen::{lang, loot_table, model, recipe, tag}, entity::Entity, item::Item, metadata::Metadata, network::Network, version::VersionData, DATAGEN_INIT_KEY, ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY
+        DATAGEN_INIT_KEY, ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY,
+        block::Block,
+        datagen::{lang, loot_table, model, recipe, tag},
+        entity::Entity,
+        item::Item,
+        metadata::Metadata,
+        network::Network,
+        version::VersionData,
     },
 };
 
@@ -181,14 +188,10 @@ fn is_valid_id(id: &str) -> bool {
             return false;
         }
     }
-    return true;
+    true
 }
 fn is_valid_id_char(char: char) -> bool {
-    return char == '_'
-        || char == '-'
-        || char >= 'a' && char <= 'z'
-        || char >= '0' && char <= '9'
-        || char == '.';
+    char == '_' || char == '-' || char.is_ascii_lowercase() || char.is_ascii_digit() || char == '.'
 }
 fn is_valid_group(group: &str) -> bool {
     if group.is_empty() {
@@ -199,32 +202,32 @@ fn is_valid_group(group: &str) -> bool {
             return false;
         }
     }
-    return group.split('.').collect::<Vec<&str>>().len() > 1;
+    group.split('.').collect::<Vec<&str>>().len() > 1
 }
 fn is_valid_group_char(char: char) -> bool {
-    return char >= 'a' && char <= 'z' || char == '.';
+    char.is_ascii_lowercase() || char == '.'
 }
 impl Welltemplate {
     fn validate(&mut self) -> bool {
         self.log.clear();
         let mut bool = true;
         if self.generation_path.is_none() {
-            self.log(format! {"Invalid: No generation path set!"});
+            self.log("Invalid: No generation path set!".to_owned());
             bool = false;
         }
         if self.modname.is_empty() || self.modname.contains(' ') {
-            self.log(format! {"Invalid: Mod name must not contain spaces and must not be empty"});
+            self.log("Invalid: Mod name must not contain spaces and must not be empty".to_owned());
             bool = false;
         }
         if !is_valid_id(&self.modid) {
-            self.log(format!{"Invalid: Mod id must be a valid Minecraft Namespace: Only contain lowercase ASCII, numbers, dashes, underscores and dots"});
+            self.log("Invalid: Mod id must be a valid Minecraft Namespace: Only contain lowercase ASCII, numbers, dashes, underscores and dots".to_owned());
             bool = false;
         }
         if !is_valid_group(&self.modgroup) {
-            self.log(format!{"Invalid: Mod group must be a valid Java Package: Only contain lowercase ASCII and dots and be longer than one segment"});
+            self.log("Invalid: Mod group must be a valid Java Package: Only contain lowercase ASCII and dots and be longer than one segment".to_owned());
             bool = false;
         }
-        return bool;
+        bool
     }
     fn generate(&mut self) {
         if self.validate() {
@@ -267,7 +270,7 @@ impl Welltemplate {
         self.currently_shown_module = self
             .module_map
             .get(name)
-            .map(|module| module.clone())
+            .cloned()
             .or(Some(Rc::new(RefCell::new(module))))
             .map(|o| (name.to_owned(), o));
         self.log(format!("Displayed {name} Module"));
@@ -314,7 +317,7 @@ impl Template {
         let bytes = match result {
             Ok(mut string) => {
                 for (key, value) in transformations.iter() {
-                    string = string.replace(key, &value)
+                    string = string.replace(key, value)
                 }
                 string.as_bytes().to_vec()
             }
@@ -324,7 +327,7 @@ impl Template {
             Some(name) => path.join(self.name).join(name),
             None => path.join(self.name),
         };
-        fs::create_dir_all(&this_path.parent().unwrap()).unwrap();
+        fs::create_dir_all(this_path.parent().unwrap()).unwrap();
         fs::write(path.join(this_path), bytes).unwrap();
     }
     pub fn write_named(&self, path: &Path, transformations: &Transformations, name: &str) {

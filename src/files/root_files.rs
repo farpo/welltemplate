@@ -8,7 +8,8 @@ pub const GRADLE_SETTINGS: Template = template(
 );
 pub const LICENSE: Template = template("LICENSE", include_str!("../../templating/LICENSE"));
 pub const GRADLEW: Template = template("gradlew", include_str!("../../templating/gradlew"));
-pub const GRADLEW_BAT: Template = template("gradlew.bat", include_str!("../../templating/gradlew.bat"));
+pub const GRADLEW_BAT: Template =
+    template("gradlew.bat", include_str!("../../templating/gradlew.bat"));
 pub const GRADLE_PROPERTIES: Template = template(
     "gradle.properties",
     include_str!("../../templating/gradle.properties"),

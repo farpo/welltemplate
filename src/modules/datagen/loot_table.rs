@@ -25,7 +25,6 @@ impl Module for LootTable {
         ui.label("This adds block and entity loot table generation");
         ui.label("Maybe in the future ill make you able set which ones you want");
         ui.label("And add more of them");
-
     }
 }
 impl FileTransformer for LootTable {
