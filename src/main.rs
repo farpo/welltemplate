@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use eframe::App;
 use egui::{ThemePreference, Ui};
 use std::{
