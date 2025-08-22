@@ -7,11 +7,11 @@ use crate::{
 };
 pub const PACKETS: Template = template(
     "network",
-    include_str!("../../templating/src/main/java/pack/age/network/ModPackets.java"),
+    include_str!("../../template/src/main/java/pack/age/network/ModPackets.java"),
 );
 pub const RECEIVER_PACKET: Template = template(
     "network/ReceiverPacket.java",
-    include_str!("../../templating/src/main/java/pack/age/network/ReceiverPacket.java"),
+    include_str!("../../template/src/main/java/pack/age/network/ReceiverPacket.java"),
 );
 pub struct Network(pub String);
 

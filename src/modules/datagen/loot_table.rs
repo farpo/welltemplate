@@ -5,7 +5,7 @@ use crate::{
 };
 pub const LOOT_TABLE: Template = template(
     "datagen/LootTableGen.java",
-    include_str!("../../../templating/src/main/java/pack/age/datagen/LootTableGen.java"),
+    include_str!("../../../template/src/main/java/pack/age/datagen/LootTableGen.java"),
 );
 pub struct LootTable;
 

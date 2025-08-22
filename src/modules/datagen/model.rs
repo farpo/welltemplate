@@ -5,7 +5,7 @@ use crate::{
 };
 pub const MODEL: Template = template(
     "datagen/ModelGen.java",
-    include_str!("../../../templating/src/main/java/pack/age/datagen/ModelGen.java"),
+    include_str!("../../../template/src/main/java/pack/age/datagen/ModelGen.java"),
 );
 const SPAWN_EGG_METHOD: &str =
     "    private void registerSpawnEgg(ItemModelGenerator generator, EntityType<?> entityType){

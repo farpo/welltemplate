@@ -5,7 +5,7 @@ use crate::{
 };
 pub const TAG: Template = template(
     "datagen/TagGen.java",
-    include_str!("../../../templating/src/main/java/pack/age/datagen/TagGen.java"),
+    include_str!("../../../template/src/main/java/pack/age/datagen/TagGen.java"),
 );
 pub struct Tag;
 

@@ -5,7 +5,7 @@ use crate::{
 };
 pub const LANG: Template = template(
     "datagen/LangGen.java",
-    include_str!("../../../templating/src/main/java/pack/age/datagen/LangGen.java"),
+    include_str!("../../../template/src/main/java/pack/age/datagen/LangGen.java"),
 );
 pub struct Lang;
 

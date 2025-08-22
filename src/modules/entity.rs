@@ -7,7 +7,7 @@ use crate::{
 };
 pub const ENTITIES: Template = template(
     "entity",
-    include_str!("../../templating/src/main/java/pack/age/entity/ModEntities.java"),
+    include_str!("../../template/src/main/java/pack/age/entity/ModEntities.java"),
 );
 pub struct Entity(pub String);
 

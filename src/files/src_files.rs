@@ -4,37 +4,37 @@ use crate::{Template, Transformations, template, template_bin};
 
 pub const FABRIC_MOD_JSON: Template = template(
     "src/main/resources/fabric.mod.json",
-    include_str!("../../templating/src/main/resources/fabric.mod.json"),
+    include_str!("../../template/src/main/resources/fabric.mod.json"),
 );
 pub const MIXINS: Template = template(
     "src/main/resources",
-    include_str!("../../templating/src/main/resources/modname.mixins.json"),
+    include_str!("../../template/src/main/resources/modname.mixins.json"),
 );
 pub const ICON: Template = template_bin(
     "src/main/resources/assets",
-    include_bytes!("../../templating/src/main/resources/assets/modname/icon.png"),
+    include_bytes!("../../template/src/main/resources/assets/modname/icon.png"),
 );
 pub const ACCESS_WIDENER: Template = template(
     "src/main/resources/",
-    include_str!("../../templating/src/main/resources/modname.accesswidener"),
+    include_str!("../../template/src/main/resources/modname.accesswidener"),
 );
 
 pub const ENTRYPOINT: Template = template(
     "",
-    include_str!("../../templating/src/main/java/pack/age/Modname.java"),
+    include_str!("../../template/src/main/java/pack/age/Modname.java"),
 );
 pub const CLIENT_ENTRYPOINT: Template = template(
     "client",
-    include_str!("../../templating/src/main/java/pack/age/client/ModnameClient.java"),
+    include_str!("../../template/src/main/java/pack/age/client/ModnameClient.java"),
 );
 pub const DATAGEN_ENTRYPOINT: Template = template(
     "datagen",
-    include_str!("../../templating/src/main/java/pack/age/datagen/ModnameDataGenerator.java"),
+    include_str!("../../template/src/main/java/pack/age/datagen/ModnameDataGenerator.java"),
 );
 
 pub const EXAMPLE_MIXIN: Template = template(
     "mixin/ExampleMixin.java",
-    include_str!("../../templating/src/main/java/pack/age/mixin/ExampleMixin.java"),
+    include_str!("../../template/src/main/java/pack/age/mixin/ExampleMixin.java"),
 );
 pub fn write_resources(path: &Path, transformations: &Transformations) {
     FABRIC_MOD_JSON.write(path, transformations);

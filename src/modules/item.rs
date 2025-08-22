@@ -7,7 +7,7 @@ use crate::{
 };
 pub const ITEMS: Template = template(
     "item",
-    include_str!("../../templating/src/main/java/pack/age/item/ModItems.java"),
+    include_str!("../../template/src/main/java/pack/age/item/ModItems.java"),
 );
 pub struct Item(pub String);
 

@@ -5,7 +5,7 @@ use crate::{
 };
 pub const RECIPE: Template = template(
     "datagen/RecipeGen.java",
-    include_str!("../../../templating/src/main/java/pack/age/datagen/RecipeGen.java"),
+    include_str!("../../../template/src/main/java/pack/age/datagen/RecipeGen.java"),
 );
 pub struct Recipe;
 

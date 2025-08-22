@@ -7,7 +7,7 @@ use crate::{
 };
 pub const BLOCKS: Template = template(
     "block",
-    include_str!("../../templating/src/main/java/pack/age/block/ModBlocks.java"),
+    include_str!("../../template/src/main/java/pack/age/block/ModBlocks.java"),
 );
 pub struct Block(pub String);
 
