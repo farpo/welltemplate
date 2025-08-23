@@ -23,7 +23,7 @@
 			"``MOD_GROUP``.client.``ENTRYPOINT_NAME``Client"
 		],
 		"fabric-datagen": [
-			"``MOD_GROUP``.``ENTRYPOINT_NAME``DataGenerator"
+			"``MOD_GROUP``.datagen.``ENTRYPOINT_NAME``DataGenerator"
 		]
 	},
 	"mixins": [
