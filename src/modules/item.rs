@@ -2,12 +2,16 @@ use std::path::Path;
 
 use crate::{
     FileTransformer, Module, Template, Transformations,
-    modules::{ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY},
+    modules::{ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY, version::McVersion, version_of},
     template,
 };
 pub const ITEMS: Template = template(
     "item",
     include_str!("../../template/src/main/java/pack/age/item/ModItems.java"),
+);
+pub const ITEMS_OLD: Template = template(
+    "item",
+    include_str!("../../template/src/main/java/pack/age/item/ModItemsOld.java"),
 );
 pub struct Item(pub String);
 
@@ -19,7 +23,11 @@ impl Module for Item {
                 .unwrap()
                 .replace(".", "/"),
         );
-        ITEMS.write_named(
+        let template = match version_of(transformations) {
+            McVersion::TWENTYONEONE => ITEMS_OLD,
+            McVersion::TWENTYONEEIGHT => ITEMS,
+        };
+        template.write_named(
             &package_path,
             transformations,
             format!("{}Items.java", self.0).as_str(),

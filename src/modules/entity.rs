@@ -2,12 +2,16 @@ use std::path::Path;
 
 use crate::{
     FileTransformer, Module, Template, Transformations,
-    modules::{ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY},
+    modules::{ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY, version::McVersion, version_of},
     template,
 };
 pub const ENTITIES: Template = template(
     "entity",
     include_str!("../../template/src/main/java/pack/age/entity/ModEntities.java"),
+);
+pub const ENTITIES_OLD: Template = template(
+    "entity",
+    include_str!("../../template/src/main/java/pack/age/entity/ModEntitiesOld.java"),
 );
 pub struct Entity(pub String);
 
@@ -19,7 +23,11 @@ impl Module for Entity {
                 .unwrap()
                 .replace(".", "/"),
         );
-        ENTITIES.write_named(
+        let template = match version_of(transformations) {
+            McVersion::TWENTYONEONE => ENTITIES_OLD,
+            McVersion::TWENTYONEEIGHT => ENTITIES,
+        };
+        template.write_named(
             &package_path,
             transformations,
             format!("{}Entities.java", self.0).as_str(),

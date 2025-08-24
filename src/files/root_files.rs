@@ -14,16 +14,13 @@ pub const GRADLE_PROPERTIES: Template = template(
     "gradle.properties",
     include_str!("../../template/gradle.properties"),
 );
-pub const BUILD_GRADLE: Template = template(
-    "build.gradle",
-    include_str!("../../template/build.gradle"),
-);
+pub const BUILD_GRADLE: Template =
+    template("build.gradle", include_str!("../../template/build.gradle"));
 pub const GITATTRIBUTES: Template = template(
     ".gitattributes",
     include_str!("../../template/.gitattributes"),
 );
-pub const GITINGNORE: Template =
-    template(".gitignore", include_str!("../../template/.gitignore"));
+pub const GITINGNORE: Template = template(".gitignore", include_str!("../../template/.gitignore"));
 
 pub const GRADLE_WRAPPER: Template = template_bin(
     "gradle/wrapper/gradle-wrapper.jar",

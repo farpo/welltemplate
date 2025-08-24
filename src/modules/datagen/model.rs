@@ -1,11 +1,17 @@
 use std::path::Path;
 
 use crate::{
-    FileTransformer, Module, Template, Transformations, modules::DATAGEN_INIT_KEY, template,
+    FileTransformer, Module, Template, Transformations,
+    modules::{DATAGEN_INIT_KEY, version::McVersion, version_of},
+    template,
 };
 pub const MODEL: Template = template(
     "datagen/ModelGen.java",
     include_str!("../../../template/src/main/java/pack/age/datagen/ModelGen.java"),
+);
+pub const MODEL_OLD: Template = template(
+    "datagen/ModelGen.java",
+    include_str!("../../../template/src/main/java/pack/age/datagen/ModelGenOld.java"),
 );
 const SPAWN_EGG_METHOD: &str =
     "    private void registerSpawnEgg(ItemModelGenerator generator, EntityType<?> entityType){
@@ -25,7 +31,11 @@ impl Module for Model {
                 .unwrap()
                 .replace(".", "/"),
         );
-        MODEL.write(&package_path, transformations);
+        let template = match version_of(transformations) {
+            McVersion::TWENTYONEONE => MODEL_OLD,
+            McVersion::TWENTYONEEIGHT => MODEL,
+        };
+        template.write(&package_path, transformations);
     }
 
     fn show_panel(&mut self, ui: &mut egui::Ui) {

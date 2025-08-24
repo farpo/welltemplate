@@ -2,12 +2,16 @@ use std::path::Path;
 
 use crate::{
     FileTransformer, Module, Template, Transformations,
-    modules::{ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY},
+    modules::{ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY, version::McVersion, version_of},
     template,
 };
 pub const BLOCKS: Template = template(
     "block",
     include_str!("../../template/src/main/java/pack/age/block/ModBlocks.java"),
+);
+pub const BLOCKS_OLD: Template = template(
+    "block",
+    include_str!("../../template/src/main/java/pack/age/block/ModBlocksOld.java"),
 );
 pub struct Block(pub String);
 
@@ -19,7 +23,11 @@ impl Module for Block {
                 .unwrap()
                 .replace(".", "/"),
         );
-        BLOCKS.write_named(
+        let template = match version_of(transformations) {
+            McVersion::TWENTYONEONE => BLOCKS_OLD,
+            McVersion::TWENTYONEEIGHT => BLOCKS,
+        };
+        template.write_named(
             &package_path,
             transformations,
             format!("{}Blocks.java", self.0).as_str(),

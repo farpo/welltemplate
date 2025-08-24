@@ -1,11 +1,17 @@
 use std::path::Path;
 
 use crate::{
-    FileTransformer, Module, Template, Transformations, modules::DATAGEN_INIT_KEY, template,
+    FileTransformer, Module, Template, Transformations,
+    modules::{DATAGEN_INIT_KEY, version::McVersion, version_of},
+    template,
 };
 pub const LOOT_TABLE: Template = template(
     "datagen/LootTableGen.java",
     include_str!("../../../template/src/main/java/pack/age/datagen/LootTableGen.java"),
+);
+pub const LOOT_TABLE_OLD: Template = template(
+    "datagen/LootTableGen.java",
+    include_str!("../../../template/src/main/java/pack/age/datagen/LootTableGenOld.java"),
 );
 pub struct LootTable;
 
@@ -17,7 +23,11 @@ impl Module for LootTable {
                 .unwrap()
                 .replace(".", "/"),
         );
-        LOOT_TABLE.write(&package_path, transformations);
+        let template = match version_of(transformations) {
+            McVersion::TWENTYONEONE => LOOT_TABLE_OLD,
+            McVersion::TWENTYONEEIGHT => LOOT_TABLE,
+        };
+        template.write(&package_path, transformations);
     }
 
     fn show_panel(&mut self, ui: &mut egui::Ui) {
