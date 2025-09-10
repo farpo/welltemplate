@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 use eframe::App;
-use egui::{ThemePreference, Ui};
+use egui::{IconData, ThemePreference, Ui};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -32,7 +32,7 @@ mod modules;
 fn main() {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            //.with_icon(load_icon())
+            .with_icon(load_icon())
             .with_inner_size([960.0, 720.0]),
         ..Default::default()
     };
@@ -43,7 +43,7 @@ fn main() {
     )
     .expect("Did not gui");
 }
-/*fn load_icon() -> IconData {
+fn load_icon() -> IconData {
     let (icon_rgba, icon_width, icon_height) = {
         let icon = include_bytes!("../icon.png");
         let image = image::load_from_memory(icon)
@@ -59,7 +59,7 @@ fn main() {
         width: icon_width,
         height: icon_height,
     }
-}*/
+}
 struct Welltemplate {
     generation_path: Option<PathBuf>,
     modid: String,
