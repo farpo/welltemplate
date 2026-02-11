@@ -1,31 +1,32 @@
-use std::path::Path;
+use crate::{key::ValueKey, module::Module};
 
-use egui::Ui;
+const MOD_AUTHORS: ValueKey = ValueKey("MOD_AUTHORS");
+const DESCRIPTION: ValueKey = ValueKey("DESCRIPTION");
+const HOMEPAGE: ValueKey = ValueKey("HOMEPAGE");
+const REPO: ValueKey = ValueKey("REPO");
 
-use crate::{FileTransformer, Module, Transformations};
-
-pub struct Metadata {
+#[derive(Clone, Debug)]
+pub struct MetadataModule {
     authors: Vec<String>,
     edited_author: String,
-    homepage: String,
-    repo: String,
     description: String,
+    homepage: String,
+    repo: String
 }
-impl Default for Metadata {
-    fn default() -> Self {
-        Metadata {
-            authors: vec![],
-            edited_author: String::new(),
-            homepage: "https://nexusrealms.de".to_owned(),
-            repo: "https://github.com/farpo/welltemplate".to_owned(),
-            description: "Tell people about your mod!".to_owned(),
-        }
+impl Module for MetadataModule {
+    fn files(&self) -> &'static [crate::key::FileKey] {
+        &[]
     }
-}
-impl Module for Metadata {
-    fn write_templates(&self, _path: &Path, _transformations: &Transformations) {}
 
-    fn show_panel(&mut self, ui: &mut Ui) {
+    fn export(&self, exports: &mut super::ExportedValues) -> anyhow::Result<()> {
+        exports.set_owned(MOD_AUTHORS, self.authors.clone().join("\",\n        \""));
+        exports.set(DESCRIPTION, &self.description);
+        exports.set(HOMEPAGE, &self.homepage);
+        exports.set(REPO, &self.repo);
+        Ok(())
+    }
+
+    fn show(&mut self, ui: &mut egui::Ui) {
         ui.label("Authors:");
         let i = self.authors.len();
         for i in 0..i {
@@ -54,12 +55,10 @@ impl Module for Metadata {
         ui.text_edit_singleline(&mut self.description)
             .labelled_by(id);
     }
-}
-impl FileTransformer for Metadata {
-    fn transform(&self, transformations: &mut Transformations) {
-        transformations.insert("``HOMEPAGE``", self.homepage.clone());
-        transformations.insert("``REPO``", self.repo.clone());
-        transformations.insert("``DESCRIPTION``", self.description.clone());
-        transformations.insert("``MOD_AUTHORS``", self.authors.join("\",\n\""));
+
+    fn create_default() -> Self
+    where
+        Self: Sized {
+        MetadataModule { authors: vec![], edited_author: String::new(), description: "Tell people about your mod!".to_owned(), homepage: "https://nexusrealms.de".to_owned(), repo: "https://github.com/farpo/welltemplate".to_owned() }
     }
 }
