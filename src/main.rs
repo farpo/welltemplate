@@ -1,34 +1,22 @@
-#![windows_subsystem = "windows"]
+mod key;
+#[cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod module;
+mod template;
+
+use anyhow::{Error, Result, bail};
 use eframe::App;
-use egui::{IconData, ThemePreference, Ui};
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    fs::{self},
-    path::{Path, PathBuf},
-    rc::Rc,
-    time::Instant,
-};
+use egui::{IconData, ThemePreference};
+use itertools::Itertools;
+use std::{collections::HashMap, fs, path::PathBuf};
 
 use crate::{
-    files::{root_files, src_files},
-    modules::{
-        DATAGEN_INIT_KEY, ENTRYPOINT_IMPORT_KEY, ENTRYPOINT_INIT_KEY,
-        block::Block,
-        datagen::{lang, loot_table, model, recipe, tag},
-        entity::Entity,
-        item::Item,
-        metadata::Metadata,
-        network::Network,
-        version::VersionData,
+    key::FileKey,
+    module::{
+        ExportedValues, Module, OptionalModule, OptionalModuleKey, metadata::MetadataModule, name::NameModule, version::VersionModule
     },
+    template::TemplateDefinition,
 };
 
-type ModuleData = Rc<RefCell<dyn Module>>;
-type Transformations = HashMap<&'static str, String>;
-
-mod files;
-mod modules;
 fn main() {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -39,7 +27,7 @@ fn main() {
     eframe::run_native(
         "Welltemplate",
         options,
-        Box::new(|_cc| Ok(Box::<Welltemplate>::default())),
+        Box::new(|_cc| Ok(Box::new(Welltemplate::create(template::load())))),
     )
     .expect("Did not gui");
 }
@@ -60,27 +48,36 @@ fn load_icon() -> IconData {
         height: icon_height,
     }
 }
+#[derive(Clone, Copy, Debug)]
+enum Selected {
+    RootModule,
+    VersionModule,
+    MetadataModule,
+    OptionalModule(OptionalModuleKey),
+}
 struct Welltemplate {
     generation_path: Option<PathBuf>,
-    modid: String,
-    modname: String,
-    modgroup: String,
-    currently_shown_module: Option<(String, Rc<RefCell<dyn Module>>)>,
-    module_map: HashMap<String, ModuleData>,
+    selected_template: Option<String>,
+    templates: HashMap<String, template::TemplateDefinition>,
+    selected: Option<Selected>,
+    root_module: NameModule,
+    version_module: VersionModule,
+    metadata_module: MetadataModule,
+    optional_modules: HashMap<OptionalModuleKey, Box<dyn OptionalModule>>,
     log: Vec<String>,
 }
 impl App for Welltemplate {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_theme(ThemePreference::Dark);
-        if let Some((_, b)) = &mut self.currently_shown_module {
+        /*if let Some((_, b)) = &mut self.currently_shown_module {
             egui::SidePanel::right("module").show(ctx, |ui| b.borrow_mut().show_panel(ui));
-        }
+        }*/
         egui::TopBottomPanel::bottom("log").show(ctx, |ui| {
             for string in self.log.iter() {
                 ui.label(string);
             }
         });
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::TopBottomPanel::top("controls").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Select generation location").clicked() {
                     if let Some(path) = rfd::FileDialog::new().pick_folder() {
@@ -90,250 +87,155 @@ impl App for Welltemplate {
                 if ui.button("Generate").clicked() {
                     self.generate();
                 }
-                if ui.button("Save Module").clicked() {
-                    self.save_module();
-                };
+                egui::ComboBox::from_label("Select Template Set")
+                    .selected_text(
+                        self.selected_template
+                            .as_ref()
+                            .unwrap_or(&"Nothing is selected".to_owned()),
+                    )
+                    .show_ui(ui, |ui| {
+                        for (key, template) in self.templates.iter() {
+                            ui.selectable_value(
+                                &mut self.selected_template,
+                                Some(key.to_owned()),
+                                &template.name,
+                            );
+                        }
+                    })
             });
             if let Some(path) = &self.generation_path {
                 ui.label(format!("Generation path: {}", path.display()));
             }
             ui.separator();
             ui.horizontal(|ui| {
+                if ui.button("Mod").clicked() {
+                    self.selected = Some(Selected::RootModule);
+                }
                 if ui.button("Versions").clicked() {
-                    self.create_module("version", VersionData::default());
+                    self.selected = Some(Selected::VersionModule);
                 }
                 if ui.button("Metadata").clicked() {
-                    self.create_module("metadata", Metadata::default());
-                }
-            });
-            ui.separator();
-            ui.label("Mod Id");
-            ui.text_edit_singleline(&mut self.modid);
-            ui.separator();
-            ui.label("Mod Name");
-            ui.text_edit_singleline(&mut self.modname);
-            ui.separator();
-            ui.label("Mod Group");
-            ui.text_edit_singleline(&mut self.modgroup);
-            ui.separator();
-            ui.label("Content modules");
-            if ui.button("Item module").clicked() {
-                self.create_module("item", Item("Mod".to_owned()));
-            }
-            if ui.button("Block module").clicked() {
-                self.create_module("block", Block("Mod".to_owned()));
-            }
-            if ui.button("Entity module").clicked() {
-                self.create_module("entity", Entity("Mod".to_owned()));
-            }
-            if ui.button("Network module").clicked() {
-                self.create_module("network", Network("Mod".to_owned()));
-            }
-            ui.separator();
-            ui.label("Datagen modules");
-            ui.horizontal(|ui| {
-                if ui.button("Lang module").clicked() {
-                    self.add_module("lang", lang::Lang);
-                }
-                if ui.button("Model module").clicked() {
-                    self.create_module("model", model::Model(false));
-                }
-                if ui.button("Tag module").clicked() {
-                    self.create_module("tag", tag::Tag);
-                }
-                if ui.button("Loot Table module").clicked() {
-                    self.create_module("loot_table", loot_table::LootTable);
-                }
-                if ui.button("Recipe module").clicked() {
-                    self.create_module("recipe", recipe::Recipe);
+                    self.selected = Some(Selected::MetadataModule);
                 }
             })
         });
+        if let Some(selected) = self.selected {
+            egui::CentralPanel::default().show(ctx, |ui| match selected {
+                Selected::RootModule => self.root_module.show(ui),
+                Selected::VersionModule => {
+                    self.version_module.show(ui);
+                    ui.separator();
+                    if let Some(ref sel) = self.selected_template {
+                        if let Some(version_module) = self
+                            .templates
+                            .get(sel)
+                            .and_then(TemplateDefinition::get_recommendations)
+                        {
+                            if ui.button("Set to recommended versions").clicked() {
+                                self.version_module = version_module;
+                            }
+                        }
+                    }
+                }
+                Selected::MetadataModule => self.metadata_module.show(ui),
+                Selected::OptionalModule(optional_module_key) => todo!(),
+            });
+        }
     }
 }
-impl Default for Welltemplate {
-    fn default() -> Self {
-        let mut template = Welltemplate {
+impl Welltemplate {
+    fn create(definitions: HashMap<String, template::TemplateDefinition>) -> Self {
+        let template = Welltemplate {
             generation_path: None,
-            modid: "".to_owned(),
-            modname: "".to_owned(),
-            modgroup: "".to_owned(),
-            currently_shown_module: None,
-            module_map: HashMap::new(),
+            selected_template: definitions
+                .keys()
+                .collect::<Vec<&String>>()
+                .pop()
+                .map(String::clone),
+            templates: definitions,
+            root_module: NameModule::create_default(),
+            version_module: VersionModule::create_default(),
+            metadata_module: MetadataModule::create_default(),
+            selected: Some(Selected::RootModule),
+            optional_modules: HashMap::new(),
             log: vec![],
         };
-        template.add_module("version", VersionData::default());
-        template.add_module("metadata", Metadata::default());
         template
     }
 }
-impl FileTransformer for Welltemplate {
-    fn transform(&self, transformations: &mut Transformations) {
-        transformations.insert("``MOD_NAME``", self.modname.clone());
-        transformations.insert("``MOD_ID``", self.modid.clone());
-        transformations.insert("``MOD_GROUP``", self.modgroup.clone());
-        let mut iter = self.modgroup.split(".").collect::<Vec<&str>>();
-        iter.remove(iter.len() - 1);
-        transformations.insert("``MOD_GROUP_SUFFIXLESS``", iter.join("."));
-        transformations.insert(ENTRYPOINT_INIT_KEY, String::new());
-        transformations.insert(ENTRYPOINT_IMPORT_KEY, String::new());
-        transformations.insert(DATAGEN_INIT_KEY, String::new());
-    }
-}
-fn is_valid_id(id: &str) -> bool {
-    if id.is_empty() {
-        return false;
-    }
-    for char in id.chars() {
-        if !is_valid_id_char(char) {
-            return false;
-        }
-    }
-    true
-}
-fn is_valid_id_char(char: char) -> bool {
-    char == '_' || char == '-' || char.is_ascii_lowercase() || char.is_ascii_digit() || char == '.'
-}
-fn is_valid_group(group: &str) -> bool {
-    if group.is_empty() {
-        return false;
-    }
-    for char in group.chars() {
-        if !is_valid_group_char(char) {
-            return false;
-        }
-    }
-    group.split('.').collect::<Vec<&str>>().len() > 1
-}
-fn is_valid_group_char(char: char) -> bool {
-    char.is_ascii_lowercase() || char == '.'
-}
+
 impl Welltemplate {
-    fn validate(&mut self) -> bool {
-        self.log.clear();
-        let mut bool = true;
-        if self.generation_path.is_none() {
-            self.log("Invalid: No generation path set!".to_owned());
-            bool = false;
-        }
-        if self.modname.is_empty() {
-            self.log("Invalid: Mod name must not be empty".to_owned());
-            bool = false;
-        } else {
-            self.modname = self.modname.replace(' ', "");
-        }
-        if !is_valid_id(&self.modid) {
-            self.log("Invalid: Mod id must be a valid Minecraft Namespace: Only contain lowercase ASCII, numbers, dashes, underscores and dots".to_owned());
-            bool = false;
-        }
-        if !is_valid_group(&self.modgroup) {
-            self.log("Invalid: Mod group must be a valid Java Package: Only contain lowercase ASCII and dots and be longer than one segment".to_owned());
-            bool = false;
-        }
-        bool
-    }
     fn generate(&mut self) {
-        if self.validate() {
-            let start = Instant::now();
-            self.log(format!(
-                "Started generating to folder {}",
-                self.generation_path.as_ref().unwrap().display()
-            ));
-            self.save_module();
-            let mut transformations: Transformations = HashMap::new();
-            self.transform(&mut transformations);
-            let entrypoint_name = self.modname.clone().replace(" ", "");
-            transformations.insert("``ENTRYPOINT_NAME``", entrypoint_name.clone());
-            for (_, module) in self.module_map.iter() {
-                module.clone().borrow().transform(&mut transformations);
+        if let (Some(location), Some(template)) = (self.generation_path.clone(), &self.selected_template) {
+            let mut exports = ExportedValues::default();
+            let mut results = vec![
+                self.root_module.export(&mut exports),
+                self.version_module.export(&mut exports),
+                self.metadata_module.export(&mut exports),
+            ];
+            for (_key, value) in self.optional_modules.iter() {
+                results.push(value.export(&mut exports));
             }
-            let path = self.generation_path.as_ref().unwrap();
-            src_files::write_resources(path, &transformations);
-            src_files::write_entrypoints(path, &transformations, entrypoint_name.as_str());
-            root_files::write(path, &transformations);
-            for (_, module) in self.module_map.iter() {
-                module
-                    .clone()
-                    .borrow()
-                    .write_templates(path, &transformations);
+            let results = results
+                .into_iter()
+                .filter_map(|n| n.err())
+                .collect::<Vec<Error>>();
+            if results.is_empty() {
+                self.log(match generate(location.clone(), &self.templates, template, exports, self.process_file_keys()) {
+                    Ok(_) => "Successfully generated".to_owned(),
+                    Err(err) => err.to_string(),
+                });
+            } else {
+                for r in results {
+                    self.log(r.to_string());
+                }
             }
-            let duration = Instant::now().duration_since(start);
-            self.log(format!("Finished generating in {:?}", duration));
+        } else {
+            self.log("Generation path not set!".to_owned());
         }
     }
-    fn save_module(&mut self) {
-        if let Some((name, b)) = &self.currently_shown_module {
-            self.module_map.insert(name.clone(), b.clone());
-            self.log(format!("Saved {name} Module"));
-        }
-        self.currently_shown_module = None;
-    }
-    fn create_module(&mut self, name: &str, module: impl Module + 'static) {
-        self.save_module();
-        self.currently_shown_module = self
-            .module_map
-            .get(name)
-            .cloned()
-            .or(Some(Rc::new(RefCell::new(module))))
-            .map(|o| (name.to_owned(), o));
-        self.log(format!("Displayed {name} Module"));
-    }
-    fn add_module(&mut self, name: &str, module: impl Module + 'static) {
-        if !self.module_map.contains_key(name) {
-            self.module_map
-                .insert(name.to_owned(), Rc::new(RefCell::new(module)));
-        }
-        self.log(format!("Added {name} Module"));
+    fn process_file_keys(&self) -> Vec<FileKey> {
+        vec![self.root_module.files(), self.version_module.files(), self.metadata_module.files()]
+        .into_iter()
+        .chain(self.optional_modules.values().map(|module| module.files()))
+        .flatten()
+        .map(|k| *k)
+        .unique()
+        .collect::<Vec<FileKey>>()
+        
     }
     fn log(&mut self, string: String) {
-        if self.log.len() > 5 {
+        if self.log.len() > 8 {
             self.log.remove(0);
         }
         self.log.push(string);
     }
 }
-
-pub trait FileTransformer {
-    fn transform(&self, transformations: &mut Transformations);
-}
-pub trait Module: FileTransformer {
-    fn write_templates(&self, path: &Path, transformations: &Transformations);
-    fn show_panel(&mut self, ui: &mut Ui);
-}
-
-const fn template(name: &'static str, file: &'static str) -> Template {
-    template_bin(name, file.as_bytes())
-}
-const fn template_bin(name: &'static str, file: &'static [u8]) -> Template {
-    Template { name, file }
-}
-pub struct Template {
-    name: &'static str,
-    file: &'static [u8],
-}
-impl Template {
-    pub fn write(&self, path: &Path, transformations: &Transformations) {
-        self.write_internal(path, transformations, None);
-    }
-    fn write_internal(&self, path: &Path, transformations: &Transformations, name: Option<&str>) {
-        let result = String::from_utf8(self.file.to_vec());
-        let bytes = match result {
-            Ok(mut string) => {
-                for (key, value) in transformations.iter() {
-                    string = string.replace(key, value)
+fn generate(
+    location: PathBuf,
+    templates: &HashMap<String, TemplateDefinition>,
+    selected: &String,
+    exports: ExportedValues,
+    files: Vec<FileKey>,
+) -> Result<()> {
+    for key in files {
+        let destination = location.join(key.resolve_path(&exports));
+        let source = template::find(key, selected, templates);
+        if let Some(source) = source {
+            fs::create_dir_all(destination.parent().unwrap())?;
+            //key.2 marks a binary file
+            if key.2 {
+                fs::copy(source, destination)?;
+            } else {
+                let mut stringy = fs::read_to_string(source)?;
+                for (val_key, value) in exports.iter() {
+                    stringy = stringy.replace(&format!("``{}``", val_key.0), &value.resolve())
                 }
-                string.as_bytes().to_vec()
+                fs::write(destination, stringy)?;
             }
-            Err(_) => self.file.to_vec(),
-        };
-        let this_path = match name {
-            Some(name) => path.join(self.name).join(name),
-            None => path.join(self.name),
-        };
-        fs::create_dir_all(this_path.parent().unwrap()).unwrap();
-        fs::write(path.join(this_path), bytes).unwrap();
+        } else {
+            bail!("Could not write file {key:?} : not found");
+        }
     }
-    pub fn write_named(&self, path: &Path, transformations: &Transformations, name: &str) {
-        self.write_internal(path, transformations, Some(name));
-    }
+    Ok(())
 }
