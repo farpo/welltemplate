@@ -12,7 +12,8 @@ use std::{collections::HashMap, fs, path::PathBuf};
 use crate::{
     key::FileKey,
     module::{
-        ExportedValues, Module, OptionalModule, OptionalModuleKey, metadata::MetadataModule, name::NameModule, version::VersionModule
+        ExportedValues, Module, OptionalModule, OptionalModuleKey, metadata::MetadataModule,
+        name::NameModule, version::VersionModule,
     },
     template::TemplateDefinition,
 };
@@ -87,6 +88,7 @@ impl App for Welltemplate {
                 if ui.button("Generate").clicked() {
                     self.generate();
                 }
+                let previous = self.selected_template.clone();
                 egui::ComboBox::from_label("Select Template Set")
                     .selected_text(
                         self.selected_template
@@ -101,7 +103,14 @@ impl App for Welltemplate {
                                 &template.name,
                             );
                         }
-                    })
+                    });
+                if previous != self.selected_template {
+                    let tags = self.selected_template.as_ref().and_then(|s| self.templates.get(s)).map(|t| t.get_tags()).unwrap_or(&[]);
+                    let iter = self.optional_modules.extract_if(|_, value| !value.is_valid(tags)).collect::<HashMap<_, _>>();
+                    for (key, _) in iter {
+                        self.log(format!("Removing module {:?} due to unsupported tags", key));
+                    }
+                }
             });
             if let Some(path) = &self.generation_path {
                 ui.label(format!("Generation path: {}", path.display()));
@@ -166,7 +175,9 @@ impl Welltemplate {
 
 impl Welltemplate {
     fn generate(&mut self) {
-        if let (Some(location), Some(template)) = (self.generation_path.clone(), &self.selected_template) {
+        if let (Some(location), Some(template)) =
+            (self.generation_path.clone(), &self.selected_template)
+        {
             let mut exports = ExportedValues::default();
             let mut results = vec![
                 self.root_module.export(&mut exports),
@@ -181,10 +192,18 @@ impl Welltemplate {
                 .filter_map(|n| n.err())
                 .collect::<Vec<Error>>();
             if results.is_empty() {
-                self.log(match generate(location.clone(), &self.templates, template, exports, self.process_file_keys()) {
-                    Ok(_) => "Successfully generated".to_owned(),
-                    Err(err) => err.to_string(),
-                });
+                self.log(
+                    match generate(
+                        location.clone(),
+                        &self.templates,
+                        template,
+                        exports,
+                        self.process_file_keys(),
+                    ) {
+                        Ok(_) => "Successfully generated".to_owned(),
+                        Err(err) => err.to_string(),
+                    },
+                );
             } else {
                 for r in results {
                     self.log(r.to_string());
@@ -195,14 +214,17 @@ impl Welltemplate {
         }
     }
     fn process_file_keys(&self) -> Vec<FileKey> {
-        vec![self.root_module.files(), self.version_module.files(), self.metadata_module.files()]
+        vec![
+            self.root_module.files(),
+            self.version_module.files(),
+            self.metadata_module.files(),
+        ]
         .into_iter()
         .chain(self.optional_modules.values().map(|module| module.files()))
         .flatten()
         .map(|k| *k)
         .unique()
         .collect::<Vec<FileKey>>()
-        
     }
     fn log(&mut self, string: String) {
         if self.log.len() > 8 {

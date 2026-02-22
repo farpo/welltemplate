@@ -1,6 +1,6 @@
+pub mod metadata;
 pub mod name;
 pub mod version;
-pub mod metadata;
 
 use std::collections::{HashMap, hash_map::Iter};
 
@@ -27,8 +27,7 @@ impl ExportedValues {
         }
     }
     pub fn init(&mut self, key: ValueKey) {
-        self.0
-                .insert(key, ExportValue::Appendable(vec![]));
+        self.0.insert(key, ExportValue::Appendable(vec![]));
     }
     pub fn get(&self, key: ValueKey) -> Option<String> {
         self.0.get(&key).map(ExportValue::resolve)
@@ -37,7 +36,7 @@ impl ExportedValues {
         self.0.iter()
     }
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum OptionalModuleKey {}
 pub trait Module {
     fn files(&self) -> &'static [FileKey];
@@ -50,4 +49,5 @@ pub trait Module {
 }
 pub trait OptionalModule: Module {
     fn key(&self) -> OptionalModuleKey;
+    fn is_valid(&self, tags: &[String]) -> bool;
 }
