@@ -11,10 +11,18 @@ pub struct TemplateDefinition {
     pub name: String,
     inherits: Option<String>,
     recommended_versions: Option<VersionModule>,
+    #[serde(default = "default_tags")]
+    tags: Vec<String>,
+}
+fn default_tags() -> Vec<String> {
+    vec![]
 }
 impl TemplateDefinition {
     pub fn get_recommendations(&self) -> Option<VersionModule> {
         self.recommended_versions.clone()
+    }
+    pub fn get_tags(&self) -> &[String] {
+        &self.tags[..]
     }
 }
 pub(crate) fn load() -> HashMap<String, TemplateDefinition> {

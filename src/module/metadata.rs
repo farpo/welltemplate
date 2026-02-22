@@ -11,7 +11,7 @@ pub struct MetadataModule {
     edited_author: String,
     description: String,
     homepage: String,
-    repo: String
+    repo: String,
 }
 impl Module for MetadataModule {
     fn files(&self) -> &'static [crate::key::FileKey] {
@@ -58,7 +58,14 @@ impl Module for MetadataModule {
 
     fn create_default() -> Self
     where
-        Self: Sized {
-        MetadataModule { authors: vec![], edited_author: String::new(), description: "Tell people about your mod!".to_owned(), homepage: "https://nexusrealms.de".to_owned(), repo: "https://github.com/farpo/welltemplate".to_owned() }
+        Self: Sized,
+    {
+        MetadataModule {
+            authors: vec![],
+            edited_author: String::new(),
+            description: "Tell people about your mod!".to_owned(),
+            homepage: "https://nexusrealms.de".to_owned(),
+            repo: "https://github.com/farpo/welltemplate".to_owned(),
+        }
     }
 }
