@@ -30,7 +30,7 @@ const GITHUB_CI: FileKey = file_key(".github/workflows/build.yml");
 
 const FABRIC_MOD_JSON: FileKey = file_key("src/main/resources/fabric.mod.json");
 const MIXINS_JSON: FileKey = file_key_modided("src/main/resources/modid.mixins.json");
-const ACCESS_WIDENER: FileKey = file_key_modided("src/main/resources/modid.accesswidener");
+const CLASS_TWEAKER: FileKey = file_key_modided("src/main/resources/modid.classtweaker");
 const ICON: FileKey = file_key_asset("src/main/resources/assets/modid/icon.png", true);
 
 const ENTRYPOINT: FileKey = file_key_modnamed_packaged("src/main/java/packaged/ModName.java");
@@ -62,7 +62,7 @@ impl Module for NameModule {
             GITHUB_CI,
             FABRIC_MOD_JSON,
             MIXINS_JSON,
-            ACCESS_WIDENER,
+            CLASS_TWEAKER,
             ICON,
             ENTRYPOINT,
             CLIENT_ENTRYPOINT,

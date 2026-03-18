@@ -24,7 +24,7 @@ fabricApi {
 	}
 }
 loom {
-	accessWidenerPath = file("src/main/resources/``MOD_ID``.accesswidener")
+	accessWidenerPath = file("src/main/resources/``MOD_ID``.classtweaker")
 }
 dependencies {
 	// To change the versions see the gradle.properties file

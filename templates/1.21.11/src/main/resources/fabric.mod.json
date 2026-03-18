@@ -11,7 +11,7 @@
 		"homepage": "``HOMEPAGE``",
 		"sources": "``REPO``"
 	},
-	"accessWidener" : "``MOD_ID``.accesswidener",
+	"accessWidener" : "``MOD_ID``.classtweaker",
 	"license": "MIT",
 	"icon": "assets/``MOD_ID``/icon.png",
 	"environment": "*",
