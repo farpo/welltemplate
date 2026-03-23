@@ -8,5 +8,15 @@
             "loom": "1.15-SNAPSHOT",
             "api": "0.141.3+1.21.11"
         }
+    },
+    "1.21.11-mojmap":{
+        "name": "1.21.11 Mojmap",
+        "recommended_versions": {
+            "minecraft": "1.21.11",
+            "yarn": "",
+            "loader": "0.18.4",
+            "loom": "1.15-SNAPSHOT",
+            "api": "0.141.3+1.21.11"
+        }
     }
 }

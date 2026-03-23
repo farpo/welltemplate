@@ -12,8 +12,7 @@ use std::{collections::HashMap, fs, path::PathBuf};
 use crate::{
     key::FileKey,
     module::{
-        ExportedValues, Module, OptionalModule, OptionalModuleKey, metadata::MetadataModule,
-        name::NameModule, version::VersionModule,
+        ExportedValues, Module, OptionalModule, OptionalModuleKey, metadata::MetadataModule, name::NameModule, tenreg::TenregModule, version::VersionModule
     },
     template::TemplateDefinition,
 };
@@ -126,6 +125,12 @@ impl App for Welltemplate {
                 if ui.button("Metadata").clicked() {
                     self.selected = Some(Selected::MetadataModule);
                 }
+                if ui.button("Tenreg").clicked() {
+                    if !self.optional_modules.contains_key(&OptionalModuleKey::Tenreg) {
+                        self.optional_modules.insert(OptionalModuleKey::Tenreg, Box::new(TenregModule::create_default()));
+                    }
+                    self.selected = Some(Selected::OptionalModule(OptionalModuleKey::Tenreg));
+                }
             })
         });
         if let Some(selected) = self.selected {
@@ -147,7 +152,12 @@ impl App for Welltemplate {
                     }
                 }
                 Selected::MetadataModule => self.metadata_module.show(ui),
-                Selected::OptionalModule(optional_module_key) => todo!(),
+                Selected::OptionalModule(optional_module_key) => {
+                    let b = self.optional_modules.get_mut(&optional_module_key);
+                    if let Some(mod_box) = b {
+                        mod_box.as_mut().show(ui);
+                    }
+                },
             });
         }
     }
@@ -187,6 +197,7 @@ impl Welltemplate {
             for (_key, value) in self.optional_modules.iter() {
                 results.push(value.export(&mut exports));
             }
+            exports.canonicalize();
             let results = results
                 .into_iter()
                 .filter_map(|n| n.err())
@@ -251,7 +262,7 @@ fn generate(
             } else {
                 let mut stringy = fs::read_to_string(source)?;
                 for (val_key, value) in exports.iter() {
-                    stringy = stringy.replace(&format!("``{}``", val_key.0), &value.resolve())
+                    stringy = stringy.replace(&val_key.to_pattern_string(), &value.resolve())
                 }
                 fs::write(destination, stringy)?;
             }

@@ -10,7 +10,6 @@ use crate::{
 };
 
 const MOD_NAME: ValueKey = ValueKey("MOD_NAME");
-const MOD_GROUP: ValueKey = ValueKey("MOD_GROUP");
 const SUFFIXELESS_GROUP: ValueKey = ValueKey("MOD_GROUP_SUFFIXLESS");
 
 const LICENSE_HOLDER: ValueKey = ValueKey("LICENSE_HOLDER");
@@ -82,7 +81,7 @@ impl Module for NameModule {
         }
         exports.set(MOD_NAME, &self.modname);
         exports.set(common::MOD_ID, &self.modid);
-        exports.set(MOD_GROUP, &self.modgroup);
+        exports.set(common::MOD_GROUP, &self.modgroup);
         exports.set(LICENSE_HOLDER, &self.license_holder);
         let entrypoint_name = self.modname.clone().replace(" ", "");
         exports.set_owned(common::ENTRYPOINT_NAME, entrypoint_name);
@@ -99,7 +98,10 @@ impl Module for NameModule {
         exports.init(common::CLIENT_IMPORTS);
         exports.init(common::DATAGEN_INITS);
         exports.init(common::DATAGEN_IMPORTS);
-
+        exports.init(common::GRADLE_PROPERTIES);
+        exports.init(common::REPOSITORIES);
+        exports.init(common::DEPENDENCIES);
+        exports.init(common::ENTRYPOINT_STATICS);
         Ok(())
     }
 

@@ -4,13 +4,13 @@ import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 ``ENTRYPOINT_IMPORTS``
 
 public class ``ENTRYPOINT_NAME`` implements ModInitializer {
 	public static final String MOD_ID = "``MOD_ID``";
-
+	
 ``ENTRYPOINT_STATICS``
 
 	// This logger is used to write text to the console and the log file.
@@ -18,7 +18,7 @@ public class ``ENTRYPOINT_NAME`` implements ModInitializer {
 	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static Identifier id(String name){
-		return Identifier.of(MOD_ID, name);
+		return Identifier.fromNamespaceAndPath(MOD_ID, name);
 	}
 	@Override
 	public void onInitialize() {

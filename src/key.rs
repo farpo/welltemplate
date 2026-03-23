@@ -1,4 +1,5 @@
-use std::path::PathBuf;
+use std::{path::PathBuf};
+
 
 use crate::module::ExportedValues;
 
@@ -94,6 +95,11 @@ impl PartialEq for FileKey {
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ValueKey(pub(crate) &'static str);
+impl ValueKey {
+    pub fn to_pattern_string(&self) -> String{
+        format!("``{}``", self.0)
+    }
+}
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ExportValue {
     Settable(String),
@@ -104,6 +110,18 @@ impl ExportValue {
         match self {
             ExportValue::Settable(string) => string.clone(),
             ExportValue::Appendable(items) => items.clone().join(""),
+        }
+    }
+    pub fn canonicalize(&mut self, dependency: &ValueKey, value: &ExportValue){
+        match self {
+            ExportValue::Settable(string) => {
+                *string = string.replace(&dependency.to_pattern_string(), &value.resolve())
+            },
+            ExportValue::Appendable(items) => {
+                for item in items.iter_mut().filter(|e| e.contains(&dependency.to_pattern_string())) {
+                    *item = item.replace(&dependency.to_pattern_string(), &value.resolve())
+                }
+            },
         }
     }
 }
@@ -119,4 +137,9 @@ pub mod common {
     pub const ENTRYPOINT_NAME: ValueKey = ValueKey("ENTRYPOINT_NAME");
     pub const PATHIFIED_GROUP: ValueKey = ValueKey("PATHIFIED_GROUP");
     pub const MOD_ID: ValueKey = ValueKey("MOD_ID");
+    pub const MOD_GROUP: ValueKey = ValueKey("MOD_GROUP");
+    pub const GRADLE_PROPERTIES: ValueKey = ValueKey("GRADLE_PROPERTIES");
+    pub const REPOSITORIES: ValueKey = ValueKey("REPOSITORIES");
+    pub const DEPENDENCIES: ValueKey = ValueKey("DEPENDENCIES");
+    pub const ENTRYPOINT_STATICS: ValueKey = ValueKey("ENTRYPOINT_STATICS");
 }
