@@ -26,6 +26,7 @@ const GITATTRIBUTES: FileKey = file_key(".gitattributes");
 const GRADLE_WRAPPER: FileKey = file_key_binary("gradle/wrapper/gradle-wrapper.jar");
 const GRADLE_WRAPPER_PROPERTIES: FileKey = file_key("gradle/wrapper/gradle-wrapper.properties");
 const GITHUB_CI: FileKey = file_key(".github/workflows/build.yml");
+const GITLAB_CI: FileKey = file_key(".gitlab-ci.yml");
 
 const FABRIC_MOD_JSON: FileKey = file_key("src/main/resources/fabric.mod.json");
 const MIXINS_JSON: FileKey = file_key_modided("src/main/resources/modid.mixins.json");
@@ -59,6 +60,7 @@ impl Module for NameModule {
             GRADLE_WRAPPER,
             GRADLE_WRAPPER_PROPERTIES,
             GITHUB_CI,
+            GITLAB_CI,
             FABRIC_MOD_JSON,
             MIXINS_JSON,
             CLASS_TWEAKER,
